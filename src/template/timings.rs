@@ -117,21 +117,15 @@ impl From<&Timing> for JsonValue {
         let part_1 = value.part_1.clone().map(JsonValue::String);
         let part_2 = value.part_2.clone().map(JsonValue::String);
 
-        map.insert(
-            "part_1".into(),
-            match part_1 {
-                Some(x) => x,
-                None => JsonValue::Null,
-            },
-        );
+        map.insert("part_1".into(), match part_1 {
+            Some(x) => x,
+            None => JsonValue::Null,
+        });
 
-        map.insert(
-            "part_2".into(),
-            match part_2 {
-                Some(x) => x,
-                None => JsonValue::Null,
-            },
-        );
+        map.insert("part_2".into(), match part_2 {
+            Some(x) => x,
+            None => JsonValue::Null,
+        });
 
         JsonValue::Object(map)
     }
