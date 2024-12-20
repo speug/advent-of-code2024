@@ -3,13 +3,12 @@ use regex::Regex;
 
 pub fn part_one(input: &str) -> Option<u64> {
     let mut output: u64 = 0;
-    let mul_re = Regex::new(r"mul\(\d{1,3},\d{1,3}\)").unwrap();
-    let num_re = Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
+    let mul_re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
     for line in input.lines() {
         let matches: Vec<_> = mul_re.find_iter(line).map(|mat| mat.as_str()).collect();
 
         for mat in matches {
-            if let Some(captures) = num_re.captures(mat) {
+            if let Some(captures) = mul_re.captures(mat) {
                 let x = captures.get(1).unwrap().as_str().parse::<u64>().unwrap();
                 let y = captures.get(2).unwrap().as_str().parse::<u64>().unwrap();
                 output += x * y;
