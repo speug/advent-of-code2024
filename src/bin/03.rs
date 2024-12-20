@@ -19,6 +19,9 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
+    // add do() in the beginning of line
+    // split at every do()
+    // for each chunk, split at dont(); work on first part
     None
 }
 
