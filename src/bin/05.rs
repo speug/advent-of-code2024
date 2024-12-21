@@ -89,8 +89,33 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(out)
 }
 
+fn sort_by_rules(pages: &mut Vec<u8>, rules: &Vec<Rule>) {
+    for rule in rules {
+        if !(pages.contains(&rule.first) && pages.contains(&rule.second)) {
+            continue;
+        }
+        let pos_first = pages.iter().position(|&v| v == rule.first);
+        let pos_second = pages.iter().position(|&v| v == rule.second);
+        if pos_first > pos_second {
+            pages.swap(pos_first.unwrap(), pos_second.unwrap());
+        }
+    }
+}
+
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let (rules, manuals) = parse_input(input);
+    let mut out = 0u64;
+    for mut manual in manuals {
+        for rule in &rules {
+            if !check_rule(&manual, &rule) {
+                sort_by_rules(&mut manual, &rules);
+                println!("{:?}", manual);
+                out += manual[manual.len() / 2] as u64;
+                break;
+            }
+        }
+    }
+    Some(out)
 }
 
 #[cfg(test)]
@@ -106,6 +131,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(123));
     }
 }
