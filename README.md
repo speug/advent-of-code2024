@@ -20,12 +20,12 @@ Thanks for the excellent template Felix!
 
 | Day | Part 1 | Part 2 |
 | :---: | :---: | :---:  |
-| [Day 1](./src/bin/01.rs) | `41.6µs` | `54.9µs` |
-| [Day 2](./src/bin/02.rs) | `87.7µs` | `219.9µs` |
-| [Day 3](./src/bin/03.rs) | `280.9µs` | `232.7µs` |
-| [Day 4](./src/bin/04.rs) | `13.7ms` | `-` |
+| [Day 1](./src/bin/01.rs) | `41.5µs` | `54.8µs` |
+| [Day 2](./src/bin/02.rs) | `88.7µs` | `222.8µs` |
+| [Day 3](./src/bin/03.rs) | `283.0µs` | `231.2µs` |
+| [Day 4](./src/bin/04.rs) | `13.7ms` | `16.2ms` |
 
-**Total: 14.62ms**
+**Total: 30.82ms**
 <!--- benchmarking table --->
 
 ---
