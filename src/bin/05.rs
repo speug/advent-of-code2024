@@ -40,9 +40,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
             manuals_with_dups.push(i);
         }
     }
-    if manuals_with_dups.is_empty() {
-        println!("No duplicate pages in any manuals!");
-    } else {
+    if !manuals_with_dups.is_empty() {
         println!(
             "Following manual indices have duplicates: {:?}",
             manuals_with_dups
