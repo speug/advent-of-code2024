@@ -19,11 +19,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
     let mut manuals = Vec::new();
     for line in input.lines() {
         if line.contains("|") {
-            let parts: Vec<u8> = line
-                .split("|")
-                .into_iter()
-                .map(|v| v.parse::<u8>().unwrap())
-                .collect();
+            let parts: Vec<u8> = line.split("|").map(|v| v.parse::<u8>().unwrap()).collect();
             if parts.len() == 2 {
                 let rule = Rule {
                     first: parts[0],
@@ -34,11 +30,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
                 panic!("Line {:?} could not be parsed!", line)
             }
         } else if line.contains(",") {
-            let parts: Vec<u8> = line
-                .split(",")
-                .into_iter()
-                .map(|v| v.parse::<u8>().unwrap())
-                .collect();
+            let parts: Vec<u8> = line.split(",").map(|v| v.parse::<u8>().unwrap()).collect();
             manuals.push(parts);
         }
     }
@@ -48,7 +40,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
             manuals_with_dups.push(i);
         }
     }
-    if manuals_with_dups.len() == 0 {
+    if manuals_with_dups.is_empty() {
         println!("No duplicate pages in any manuals!");
     } else {
         println!(
@@ -59,7 +51,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
     (rules, manuals)
 }
 
-fn check_rule(pages: &Vec<u8>, rule: &Rule) -> bool {
+fn check_rule(pages: &[u8], rule: &Rule) -> bool {
     if !(pages.contains(&rule.first) && pages.contains(&rule.second)) {
         return true;
     }
@@ -77,7 +69,7 @@ pub fn part_one(input: &str) -> Option<u64> {
     for manual in manuals {
         let mut rules_ok = true;
         for rule in &rules {
-            if !check_rule(&manual, &rule) {
+            if !check_rule(&manual, rule) {
                 rules_ok = false;
                 break;
             }
@@ -89,7 +81,8 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(out)
 }
 
-fn sort_by_rules(pages: &mut Vec<u8>, rules: &Vec<Rule>) {
+fn sort_by_rules(pages: &mut [u8], rules: &Vec<Rule>) -> u16 {
+    let mut swaps = 0u16;
     for rule in rules {
         if !(pages.contains(&rule.first) && pages.contains(&rule.second)) {
             continue;
@@ -98,8 +91,10 @@ fn sort_by_rules(pages: &mut Vec<u8>, rules: &Vec<Rule>) {
         let pos_second = pages.iter().position(|&v| v == rule.second);
         if pos_first > pos_second {
             pages.swap(pos_first.unwrap(), pos_second.unwrap());
+            swaps += 1;
         }
     }
+    swaps
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
@@ -107,9 +102,13 @@ pub fn part_two(input: &str) -> Option<u64> {
     let mut out = 0u64;
     for mut manual in manuals {
         for rule in &rules {
-            if !check_rule(&manual, &rule) {
-                sort_by_rules(&mut manual, &rules);
-                println!("{:?}", manual);
+            if !check_rule(&manual, rule) {
+                // keep sorting until no additional sorts are needed; kind of bad but eh
+                // rust does not support partial orderings for sort :^)
+                let mut swaps = 1;
+                while swaps != 0 {
+                    swaps = sort_by_rules(&mut manual, &rules);
+                }
                 out += manual[manual.len() / 2] as u64;
                 break;
             }
