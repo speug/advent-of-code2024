@@ -36,3 +36,10 @@ pub fn get_neighboring_indices_2d(
         })
         .collect()
 }
+
+pub fn prettyprint_grid(grid: &Vec<Vec<char>>) -> String {
+    grid.iter()
+        .map(|row| row.iter().collect::<String>())
+        .collect::<Vec<String>>()
+        .join("\n")
+}
