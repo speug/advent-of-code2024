@@ -1,5 +1,6 @@
 advent_of_code::solution!(6);
 use advent_of_code::prettyprint_grid;
+use std::collections::HashSet;
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
     let mut rows = Vec::new();
@@ -10,7 +11,7 @@ fn parse_input(input: &str) -> Vec<Vec<char>> {
     rows
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
     North,
     East,
@@ -27,42 +28,41 @@ enum GuardStatus {
 }
 
 #[derive(Debug)]
-struct Guard {
-    orig_position: (isize, isize),
-    position: (isize, isize),
-    orig_direction: Direction,
+struct Guard<'a> {
+    x: isize,
+    y: isize,
     direction: Direction,
-    grid: Vec<Vec<char>>,
+    grid: &'a Vec<Vec<char>>,
     grid_height: isize,
     grid_width: isize,
-    visited: u64,
+    visited: HashSet<((isize, isize), Direction)>,
 }
 
-impl Guard {
-    fn new(x: isize, y: isize, direction: Direction, mut grid: Vec<Vec<char>>) -> Self {
-        grid[x as usize][y as usize] = 'X';
+impl<'a> Guard<'a> {
+    fn new(x: isize, y: isize, direction: Direction, grid: &'a Vec<Vec<char>>) -> Self {
         Self {
-            orig_position: (x, y),
-            position: (x, y),
+            x,
+            y,
             direction,
-            orig_direction: direction,
-            grid: grid.clone(),
+            grid: grid,
             grid_height: grid.clone().len() as isize,
             grid_width: grid[0].clone().len() as isize,
-            visited: 1,
+            visited: HashSet::from([((x, y), direction)]),
         }
     }
 
     fn step(&mut self) -> GuardStatus {
         let (nx, ny) = match self.direction {
-            Direction::North => (self.position.0 - 1, self.position.1),
-            Direction::East => (self.position.0, self.position.1 + 1),
-            Direction::South => (self.position.0 + 1, self.position.1),
-            Direction::West => (self.position.0, self.position.1 - 1),
+            Direction::North => (self.x - 1, self.y),
+            Direction::East => (self.x, self.y + 1),
+            Direction::South => (self.x + 1, self.y),
+            Direction::West => (self.x, self.y - 1),
         };
         if nx < 0 || nx >= self.grid_height || ny < 0 || ny >= self.grid_width {
             return GuardStatus::Out;
-        } else if self.grid[nx as usize][ny as usize] == '#' {
+        } else if self.grid[nx as usize][ny as usize] == '#'
+            || self.grid[nx as usize][ny as usize] == 'O'
+        {
             self.direction = match self.direction {
                 Direction::North => Direction::East,
                 Direction::East => Direction::South,
@@ -70,15 +70,14 @@ impl Guard {
                 Direction::West => Direction::North,
             };
             return GuardStatus::Turning;
-        } else if (nx, ny) == self.orig_position && self.direction == self.orig_direction {
-            return GuardStatus::Looping;
         } else {
-            self.position = (nx, ny);
-            if self.grid[nx as usize][ny as usize] != 'X' {
-                self.visited += 1;
-                self.grid[nx as usize][ny as usize] = 'X';
+            self.x = nx;
+            self.y = ny;
+            if self.visited.insert(((nx, ny), self.direction)) {
+                return GuardStatus::In;
+            } else {
+                return GuardStatus::Looping;
             }
-            return GuardStatus::In;
         }
     }
 }
@@ -89,12 +88,7 @@ pub fn part_one(input: &str) -> Option<u64> {
     for (i, row) in grid.clone().into_iter().enumerate() {
         for (j, elem) in row.into_iter().enumerate() {
             if elem == '^' {
-                guardopt = Some(Guard::new(
-                    i as isize,
-                    j as isize,
-                    Direction::North,
-                    grid.clone(),
-                ));
+                guardopt = Some(Guard::new(i as isize, j as isize, Direction::North, &grid));
             }
         }
     }
@@ -104,18 +98,69 @@ pub fn part_one(input: &str) -> Option<u64> {
         if status == GuardStatus::Out {
             break;
         }
-        // } else if status == GuardStatus::In {
-        // println!("{}", prettyprint_grid(&guard.grid));
-        // }
     }
-    Some(guard.visited)
+    // collect all unique visited positions
+    let unique_positions: HashSet<(isize, isize)> = guard
+        .visited
+        .iter()
+        .map(|((x, y), _)| (*x, *y))
+        .collect::<HashSet<_>>();
+    Some(unique_positions.len() as u64)
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    // find indices that can be visited
-    // for each point visited, change into obstacle; loop until looping or out
-    // iterate
-    None
+    // first, have one guard map out all visited grid points
+    let mut grid = parse_input(&input);
+    let mut guardopt: Option<Guard> = None;
+    let mut orig_position_opt = None;
+    for (i, row) in grid.clone().into_iter().enumerate() {
+        for (j, elem) in row.into_iter().enumerate() {
+            if elem == '^' {
+                orig_position_opt = Some((i, j));
+                guardopt = Some(Guard::new(i as isize, j as isize, Direction::North, &grid));
+                break;
+            }
+        }
+    }
+    let mut guard = guardopt.unwrap();
+    let orig_position = orig_position_opt.unwrap();
+    loop {
+        let status = guard.step();
+        if status == GuardStatus::Out {
+            break;
+        }
+    }
+    let unique_positions: HashSet<(isize, isize)> = guard
+        .visited
+        .iter()
+        .map(|((x, y), _)| (*x, *y))
+        .collect::<HashSet<_>>();
+    // then, for each visited point, add an obstacle
+    // spawn a new guard and have them walk until out or looping
+    let mut loops = 0u64;
+    for (i, j) in unique_positions {
+        if i as usize == orig_position.0 && j as usize == orig_position.1 {
+            continue;
+        }
+        grid[i as usize][j as usize] = 'O';
+        let mut new_guard = Guard::new(
+            orig_position.0 as isize,
+            orig_position.1 as isize,
+            Direction::North,
+            &grid,
+        );
+        loop {
+            let status = new_guard.step();
+            if status == GuardStatus::Out {
+                break;
+            } else if status == GuardStatus::Looping {
+                loops += 1;
+                break;
+            }
+        }
+        grid[i as usize][j as usize] = '.';
+    }
+    Some(loops)
 }
 
 #[cfg(test)]
@@ -131,6 +176,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(6));
     }
 }
