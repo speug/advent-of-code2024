@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use std::{f32::DIGITS, path::is_separator, result};
 
 advent_of_code::solution!(7);
 
@@ -49,7 +48,7 @@ fn check_equation(res: &u64, nums: &[u64], operators: Vec<&Operator>) -> bool {
         } else if **oper == Operator::Multiply {
             out *= nums[i + 1]
         } else if **oper == Operator::Concatenate {
-            out = out * 10_u64.pow(count_digits(nums[i + 1].clone())) + nums[i + 1];
+            out = out * 10_u64.pow(count_digits(nums[i + 1])) + nums[i + 1];
         }
     }
     out == *res
@@ -73,7 +72,7 @@ pub fn part_one(input: &str) -> Option<u64> {
     let mut out = 0u64;
     for (res, nums) in parsed {
         if check_all_operations(&res, &nums, vec![Operator::Add, Operator::Multiply]) {
-            out += res as u64;
+            out += res;
         }
     }
     Some(out)
@@ -88,7 +87,7 @@ pub fn part_two(input: &str) -> Option<u64> {
             Operator::Multiply,
             Operator::Concatenate,
         ]) {
-            out += res as u64;
+            out += res;
         }
     }
     Some(out)
