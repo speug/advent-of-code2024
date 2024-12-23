@@ -141,6 +141,7 @@ pub fn part_two(input: &str) -> Option<u64> {
         if i as usize == orig_position.0 && j as usize == orig_position.1 {
             continue;
         }
+        // add obstacle
         grid[i as usize][j as usize] = 'O';
         let mut new_guard = Guard::new(
             orig_position.0 as isize,
@@ -157,6 +158,7 @@ pub fn part_two(input: &str) -> Option<u64> {
                 break;
             }
         }
+        // revert grid for the next loop
         grid[i as usize][j as usize] = '.';
     }
     Some(loops)
