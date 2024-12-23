@@ -1,5 +1,4 @@
 advent_of_code::solution!(6);
-use advent_of_code::prettyprint_grid;
 use std::collections::HashSet;
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
@@ -44,7 +43,7 @@ impl<'a> Guard<'a> {
             x,
             y,
             direction,
-            grid: grid,
+            grid,
             grid_height: grid.clone().len() as isize,
             grid_width: grid[0].clone().len() as isize,
             visited: HashSet::from([((x, y), direction)]),
@@ -59,7 +58,7 @@ impl<'a> Guard<'a> {
             Direction::West => (self.x, self.y - 1),
         };
         if nx < 0 || nx >= self.grid_height || ny < 0 || ny >= self.grid_width {
-            return GuardStatus::Out;
+            GuardStatus::Out
         } else if self.grid[nx as usize][ny as usize] == '#'
             || self.grid[nx as usize][ny as usize] == 'O'
         {
@@ -69,21 +68,21 @@ impl<'a> Guard<'a> {
                 Direction::South => Direction::West,
                 Direction::West => Direction::North,
             };
-            return GuardStatus::Turning;
+            GuardStatus::Turning
         } else {
             self.x = nx;
             self.y = ny;
             if self.visited.insert(((nx, ny), self.direction)) {
-                return GuardStatus::In;
+                GuardStatus::In
             } else {
-                return GuardStatus::Looping;
+                GuardStatus::Looping
             }
         }
     }
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
-    let grid = parse_input(&input);
+    let grid = parse_input(input);
     let mut guardopt: Option<Guard> = None;
     for (i, row) in grid.clone().into_iter().enumerate() {
         for (j, elem) in row.into_iter().enumerate() {
@@ -110,7 +109,7 @@ pub fn part_one(input: &str) -> Option<u64> {
 
 pub fn part_two(input: &str) -> Option<u64> {
     // first, have one guard map out all visited grid points
-    let mut grid = parse_input(&input);
+    let mut grid = parse_input(input);
     let mut guardopt: Option<Guard> = None;
     let mut orig_position_opt = None;
     for (i, row) in grid.clone().into_iter().enumerate() {
