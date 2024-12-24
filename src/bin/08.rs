@@ -67,6 +67,8 @@ pub fn part_two(input: &str) -> Option<u64> {
     for (_, antenna_coords) in stations.iter() {
         let antenna_combs = antenna_coords.iter().combinations(2);
         for antenna_pair in antenna_combs {
+            antinodes.insert(*antenna_pair[0]);
+            antinodes.insert(*antenna_pair[1]);
             let antenna_x_diff = antenna_pair[0].0 - antenna_pair[1].0;
             let antenna_y_diff = antenna_pair[0].1 - antenna_pair[1].1;
             let (mut antinode1_x, mut antinode1_y) = (
