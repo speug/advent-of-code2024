@@ -43,3 +43,7 @@ pub fn prettyprint_grid(grid: &[Vec<char>]) -> String {
         .collect::<Vec<String>>()
         .join("\n")
 }
+
+pub fn in_grid(i: isize, j: isize, height: isize, width: isize) -> bool {
+    i >= 0 && i < height && j >= 0 && j < width
+}
