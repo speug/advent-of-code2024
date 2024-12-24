@@ -19,7 +19,7 @@ fn build_station_catalogue(grid: &[Vec<char>]) -> HashMap<char, Vec<(isize, isiz
             if *label != '.' {
                 stations
                     .entry(*label)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((i as isize, j as isize));
             }
         }
@@ -63,24 +63,29 @@ pub fn part_two(input: &str) -> Option<u64> {
     let width = grid[0].len();
     let stations = build_station_catalogue(&grid);
     let mut antinodes = HashSet::new();
+    // just use while loops to find antinodes behind 1 and 2
     for (_, antenna_coords) in stations.iter() {
         let antenna_combs = antenna_coords.iter().combinations(2);
         for antenna_pair in antenna_combs {
             let antenna_x_diff = antenna_pair[0].0 - antenna_pair[1].0;
             let antenna_y_diff = antenna_pair[0].1 - antenna_pair[1].1;
-            let (antinode1_x, antinode1_y) = (
+            let (mut antinode1_x, mut antinode1_y) = (
                 antenna_pair[0].0 + antenna_x_diff,
                 antenna_pair[0].1 + antenna_y_diff,
             );
-            let (antinode2_x, antinode2_y) = (
+            while in_grid(antinode1_x, antinode1_y, height as isize, width as isize) {
+                antinodes.insert((antinode1_x, antinode1_y));
+                antinode1_x += antenna_x_diff;
+                antinode1_y += antenna_y_diff;
+            }
+            let (mut antinode2_x, mut antinode2_y) = (
                 antenna_pair[1].0 - antenna_x_diff,
                 antenna_pair[1].1 - antenna_y_diff,
             );
-            if in_grid(antinode1_x, antinode1_y, height as isize, width as isize) {
-                antinodes.insert((antinode1_x, antinode1_y));
-            }
-            if in_grid(antinode2_x, antinode2_y, height as isize, width as isize) {
+            while in_grid(antinode2_x, antinode2_y, height as isize, width as isize) {
                 antinodes.insert((antinode2_x, antinode2_y));
+                antinode2_x -= antenna_x_diff;
+                antinode2_y -= antenna_y_diff;
             }
         }
     }
