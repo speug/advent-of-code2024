@@ -76,13 +76,12 @@ fn compact_whole_files(dm: &mut [i16]) {
     for fi in (0..=max_file_indicator).rev() {
         // println!("{}", disk_map_to_string(&dm));
         let (block_size, file_start) = file_sizes[fi as usize];
-        let valid_free_block = free_blocks.iter().position(|&(fs, _)| fs >= block_size);
+        let valid_free_block = free_blocks
+            .iter()
+            .position(|&(fs, free_start)| fs >= block_size && free_start < file_start);
         if valid_free_block.is_some() {
             let free_idx = valid_free_block.unwrap();
             let (mut free_size, mut free_start) = free_blocks[free_idx];
-            if free_start > file_start {
-                continue;
-            }
             for bi in 0..block_size {
                 dm.swap(free_start, file_start + bi);
                 free_size -= 1;
