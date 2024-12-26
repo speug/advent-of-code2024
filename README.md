@@ -25,16 +25,16 @@ Thanks for the excellent template Felix!
 
 | Day | Part 1 | Part 2 |
 | :---: | :---: | :---:  |
-| [Day 1](./src/bin/01.rs) | `43.4µs` | `56.2µs` |
-| [Day 2](./src/bin/02.rs) | `91.7µs` | `220.4µs` |
-| [Day 3](./src/bin/03.rs) | `281.6µs` | `229.2µs` |
-| [Day 4](./src/bin/04.rs) | `13.6ms` | `16.0ms` |
-| [Day 5](./src/bin/05.rs) | `824.5µs` | `3.8ms` |
-| [Day 6](./src/bin/06.rs) | `486.2µs` | `1.2s` |
-| [Day 8](./src/bin/08.rs) | `26.1µs` | `68.9µs` |
-| [Day 9](./src/bin/09.rs) | `276.2µs` | `8.5ms` |
+| [Day 1](./src/bin/01.rs) | `43.9µs` | `56.6µs` |
+| [Day 2](./src/bin/02.rs) | `91.2µs` | `219.1µs` |
+| [Day 3](./src/bin/03.rs) | `278.9µs` | `227.6µs` |
+| [Day 4](./src/bin/04.rs) | `13.7ms` | `16.0ms` |
+| [Day 5](./src/bin/05.rs) | `811.7µs` | `3.8ms` |
+| [Day 6](./src/bin/06.rs) | `489.0µs` | `1.2s` |
+| [Day 8](./src/bin/08.rs) | `26.7µs` | `70.3µs` |
+| [Day 9](./src/bin/09.rs) | `269.4µs` | `8.2ms` |
 
-**Total: 1244.50ms**
+**Total: 1244.28ms**
 <!--- benchmarking table --->
 
 ---

@@ -1,7 +1,7 @@
 advent_of_code::solution!(9);
 use std::iter::repeat;
 
-fn parse_input(input: &str) -> Vec<i16> {
+fn parse_input(input: &str, debug: bool) -> Vec<i16> {
     let mut total_disk_map_len = 0usize;
     let mut file_indicator = 0i16;
     let mut out = Vec::new();
@@ -21,8 +21,10 @@ fn parse_input(input: &str) -> Vec<i16> {
         }
         total_disk_map_len += block_len;
     }
-    println!("Total length of the disk map is {:?}", total_disk_map_len);
-    println!("Maximum file indicator is {:?}", file_indicator);
+    if debug {
+        println!("Total length of the disk map is {:?}", total_disk_map_len);
+        println!("Maximum file indicator is {:?}", file_indicator);
+    }
     out
 }
 
@@ -92,10 +94,8 @@ fn compact_whole_files(dm: &mut [i16]) {
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
-    let mut dm = parse_input(input);
-    // println!("{}", disk_map_to_string(&dm));
+    let mut dm = parse_input(input, false);
     compact_disk_map(&mut dm);
-    // println!("{}", disk_map_to_string(&dm));
     let mut checksum = 0u64;
     for (i, elem) in dm.iter().enumerate() {
         if *elem != -1 {
@@ -106,7 +106,7 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    let mut dm = parse_input(input);
+    let mut dm = parse_input(input, false);
     compact_whole_files(&mut dm);
     let mut checksum = 0u64;
     for (i, elem) in dm.iter().enumerate() {
