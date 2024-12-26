@@ -31,11 +31,12 @@ Thanks for the excellent template Felix!
 | [Day 4](./src/bin/04.rs) | `13.6ms` | `16.0ms` |
 | [Day 5](./src/bin/05.rs) | `823.1µs` | `3.9ms` |
 | [Day 6](./src/bin/06.rs) | `489.0µs` | `1.2s` |
+| [Day 7](./src/bin/07.rs) | `9.0ms` | `366.2ms` |
 | [Day 8](./src/bin/08.rs) | `26.4µs` | `69.8µs` |
 | [Day 9](./src/bin/09.rs) | `270.5µs` | `31.2ms` |
 | [Day 10](./src/bin/10.rs) | `260.2µs` | `850.0µs` |
 
-**Total: 1268.41ms**
+**Total: 1643.61ms**
 <!--- benchmarking table --->
 
 ---
