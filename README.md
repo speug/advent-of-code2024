@@ -38,9 +38,9 @@ Thanks for the excellent template Felix!
 | [Day 8](./src/bin/08.rs) | `26.3µs` | `69.7µs` |
 | [Day 9](./src/bin/09.rs) | `269.7µs` | `31.4ms` |
 | [Day 10](./src/bin/10.rs) | `261.1µs` | `826.5µs` |
-| [Day 11](./src/bin/11.rs) | `1.4ms` | `4.8ms` |
+| [Day 11](./src/bin/11.rs) | `1.4ms` | `5.1ms` |
 
-**Total: 1950.15ms**
+**Total: 1950.45ms**
 <!--- benchmarking table --->
 
 ---
