@@ -64,18 +64,88 @@ pub fn part_one(input: &str) -> Option<u64> {
     for i in 0..h {
         for j in 0..w {
             if !areas.iter().any(|(_, hm)| hm.contains(&(i, j))) {
-                let (area_members, area, perimeter) =
-                    find_area_and_perimeter((i, j), &grid, &h, &w);
-                out += (area as u64 * perimeter as u64) as u64;
-                areas.push((grid[i][j], area_members));
+                let (area_map, area, perimeter) = find_area_and_perimeter((i, j), &grid, &h, &w);
+                out += area as u64 * perimeter as u64;
+                areas.push((grid[i][j], area_map));
             }
         }
     }
     Some(out)
 }
 
+fn count_corners(area_map: &HashSet<(isize, isize)>) -> u64 {
+    let mut corners = 0u64;
+    // there are only so many cases, so can probably just write them out
+    for (x, y) in area_map {
+        // check upper left corner
+        // inside corner
+        if area_map.contains(&(x - 1, *y))
+            && area_map.contains(&(*x, y - 1))
+            && !area_map.contains(&(x - 1, y - 1))
+        {
+            corners += 1;
+        // outside corner
+        } else if !area_map.contains(&(x - 1, *y)) && !area_map.contains(&(*x, y - 1)) {
+            corners += 1;
+        }
+        // check upper right corner
+        // inside corner
+        if area_map.contains(&(x - 1, *y))
+            && area_map.contains(&(*x, y + 1))
+            && !area_map.contains(&(x - 1, y + 1))
+        {
+            corners += 1;
+        // outside corner
+        } else if !area_map.contains(&(x - 1, *y)) && !area_map.contains(&(*x, y + 1)) {
+            corners += 1;
+        }
+        // check lower right corner
+        // inside corner
+        if area_map.contains(&(x + 1, *y))
+            && area_map.contains(&(*x, y + 1))
+            && !area_map.contains(&(x + 1, y + 1))
+        {
+            corners += 1;
+        // outside corner
+        } else if !area_map.contains(&(x + 1, *y)) && !area_map.contains(&(*x, y + 1)) {
+            corners += 1;
+        }
+        // check lower left corner
+        // inside corner
+        if area_map.contains(&(x + 1, *y))
+            && area_map.contains(&(*x, y - 1))
+            && !area_map.contains(&(x + 1, y - 1))
+        {
+            corners += 1;
+        // outside corner
+        } else if !area_map.contains(&(x + 1, *y)) && !area_map.contains(&(*x, y - 1)) {
+            corners += 1;
+        }
+    }
+    corners
+}
+
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let grid = parse_input(input);
+    let h = grid.len();
+    let w = grid[0].len();
+    let mut areas: Vec<(char, HashSet<(usize, usize)>)> = Vec::new();
+    let mut out = 0u64;
+    for i in 0..h {
+        for j in 0..w {
+            if !areas.iter().any(|(_, hm)| hm.contains(&(i, j))) {
+                let (area_map, area, _) = find_area_and_perimeter((i, j), &grid, &h, &w);
+                let area_isize: HashSet<(isize, isize)> = area_map
+                    .iter()
+                    .map(|&(x, y)| (x as isize, y as isize))
+                    .collect();
+                let corners = count_corners(&area_isize);
+                out += area as u64 * corners;
+                areas.push((grid[i][j], area_map));
+            }
+        }
+    }
+    Some(out)
 }
 
 #[cfg(test)]
@@ -91,6 +161,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(1206));
     }
 }
