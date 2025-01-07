@@ -91,6 +91,7 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i16, grid_height: i16) -> Result<(), Error> {
+    // test if this works!
     disable_raw_mode()?;
     let mut robot_counts = HashMap::new();
     for r in robots.iter() {
