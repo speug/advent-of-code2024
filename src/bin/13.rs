@@ -148,18 +148,21 @@ fn cheapest_win(m: &Machine, upper_limit: i64) -> Option<u64> {
     if m.prize.1 % d_y != 0 {
         return None;
     }
-    // check for solutions using cramer's rule
+    // find a solution using cramer's rule
     let s_den: i64 = m.prize.0 as i64 * m.b.1 as i64 - m.b.0 as i64 * m.prize.1 as i64;
     let t_den: i64 = m.a.0 as i64 * m.prize.1 as i64 - m.prize.0 as i64 * m.a.1 as i64;
     let numerator = m.a.0 as i64 * m.b.1 as i64 - m.a.1 as i64 * m.b.0 as i64;
     // unique solution
-    if s_den != 0 || t_den != 0 || numerator != 0 {
+    if (s_den != 0 || t_den != 0) && numerator != 0 {
+        // integer solution
         if (s_den % numerator == 0) && (t_den % numerator == 0) {
             let (s, t) = (s_den / numerator, t_den / numerator);
+            // if either of the coefficients is negative, not a valid solution
             if (s < 0) || (t < 0) {
                 return None;
             }
-            if upper_limit == 0 || (s < upper_limit && t < upper_limit) {
+            // otherwise solution is valid if less than upper limit or no upper limit
+            if upper_limit == 0 || (s <= upper_limit && t <= upper_limit) {
                 return Some(3 * s as u64 + t as u64);
             } else {
                 return None;
