@@ -1,7 +1,12 @@
 advent_of_code::solution!(14);
+use colored::Colorize;
 use core::fmt;
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEvent},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
 use regex::Regex;
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Error};
 
 struct Robot {
     pos: (i16, i16),
@@ -13,6 +18,13 @@ impl Robot {
         self.pos = (
             (((self.pos.0 + self.v.0) % grid_w) + grid_w) % grid_w,
             (((self.pos.1 + self.v.1) % grid_h) + grid_h) % grid_h,
+        );
+    }
+
+    fn step_back(&mut self, grid_w: i16, grid_h: i16) {
+        self.pos = (
+            (((self.pos.0 - self.v.0) % grid_w) + grid_w) % grid_w,
+            (((self.pos.1 - self.v.1) % grid_h) + grid_h) % grid_h,
         );
     }
 }
@@ -71,9 +83,97 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some((quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3]) as u64)
 }
 
+fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i16, grid_height: i16) -> Result<(), Error> {
+    disable_raw_mode()?;
+    let mut robot_counts = HashMap::new();
+    for r in robots.iter() {
+        *robot_counts.entry(r.pos).or_insert(0) += 1;
+    }
+    for i in 0..grid_height {
+        for j in 0..grid_width {
+            if robot_counts.contains_key(&(i, j)) {
+                let count = robot_counts.get(&(i, j)).unwrap();
+                let count_char = if *count > 9 {
+                    "#".to_string()
+                } else {
+                    count.to_string()
+                };
+                print!("{}", count_char.green());
+            } else {
+                print!(".");
+            }
+            if j == grid_width - 1 {
+                println!();
+            }
+        }
+    }
+    enable_raw_mode()?;
+    Ok(())
+}
+
+fn step_all(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
+    for r in robots.iter_mut() {
+        r.step(grid_w, grid_h);
+    }
+    *time += 1;
+    println!("Grid at time t={}", time);
+    let _ = prettyprint_grid(robots, grid_w, grid_h);
+}
+
+fn step_all_back(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
+    if *time > 0 {
+        for r in robots.iter_mut() {
+            r.step_back(grid_w, grid_h);
+        }
+        *time -= 1;
+    }
+    println!("Grid at time t={}", time);
+    let _ = prettyprint_grid(robots, grid_w, grid_h);
+}
+
+fn grid_visualiser(
+    mut robots: Vec<Robot>,
+    grid_width: i16,
+    grid_height: i16,
+) -> Result<u16, Error> {
+    let mut time = 0u16;
+    enable_raw_mode()?;
+
+    println!(
+        "Press right arrow to step forward in time, left arrow to go back or enter to output current time. Press 'q' to quit."
+    );
+    loop {
+        if event::poll(std::time::Duration::from_secs(1))? {
+            if let Event::Key(KeyEvent { code, .. }) = event::read()? {
+                match code {
+                    KeyCode::Left => step_all_back(&mut robots, grid_width, grid_height, &mut time),
+                    KeyCode::Right => step_all(&mut robots, grid_width, grid_height, &mut time),
+                    KeyCode::Enter => {
+                        println!("Enter pressed, tree found.");
+                        break;
+                    }
+                    KeyCode::Char('q') => {
+                        println!("Quitting...");
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    disable_raw_mode()?;
+    Ok(time)
+}
+
 pub fn part_two(input: &str) -> Option<u64> {
     // just print/display?
-    None
+    let mut cache = None;
+    if cache.is_none() {
+        let robots = parse_input(input);
+        let (w, h) = (101, 103);
+        cache = grid_visualiser(robots, w, h).ok();
+    }
+    Some(cache.unwrap() as u64)
 }
 
 #[cfg(test)]
