@@ -8,6 +8,7 @@ use crossterm::{
 use regex::Regex;
 use std::{collections::HashMap, io::Error};
 
+#[derive(Clone)]
 struct Robot {
     pos: (i16, i16),
     v: (i16, i16),
@@ -57,17 +58,12 @@ fn parse_input(input: &str) -> Vec<Robot> {
     robots
 }
 
-pub fn part_one(input: &str) -> Option<u64> {
-    let robots = parse_input(input);
-    let (w, h) = (101, 103);
+fn calculate_safety_score(robots: &Vec<Robot>, grid_w: i16, grid_h: i16) -> u64 {
     let mut end_coords = HashMap::new();
-    for mut r in robots.into_iter() {
-        for _ in 0..100 {
-            r.step(w, h);
-        }
+    for r in robots.iter() {
         *end_coords.entry(r.pos).or_insert(0) += 1;
     }
-    let (middle_x, middle_y) = (w / 2, h / 2);
+    let (middle_x, middle_y) = (grid_w / 2, grid_h / 2);
     let mut quadrants = vec![0, 0, 0, 0];
     for (pos, count) in end_coords.iter() {
         if pos.0 < middle_x && pos.1 < middle_y {
@@ -80,7 +76,18 @@ pub fn part_one(input: &str) -> Option<u64> {
             quadrants[3] += count;
         }
     }
-    Some((quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3]) as u64)
+    (quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3]) as u64
+}
+
+pub fn part_one(input: &str) -> Option<u64> {
+    let robots = parse_input(input);
+    let (w, h) = (101, 103);
+    for mut r in robots.clone().into_iter() {
+        for _ in 0..100 {
+            r.step(w, h);
+        }
+    }
+    Some(calculate_safety_score(&robots, w, h))
 }
 
 fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i16, grid_height: i16) -> Result<(), Error> {
@@ -131,6 +138,21 @@ fn step_all_back(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u
     let _ = prettyprint_grid(robots, grid_w, grid_h);
 }
 
+fn step_until_safer(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
+    let max_iter: u16 = 10000;
+    let mut iter = 0u16;
+    let mut safety = calculate_safety_score(robots, grid_w, grid_h);
+    while (iter < max_iter) && (calculate_safety_score(robots, grid_w, grid_h) >= safety) {
+        for r in robots.iter_mut() {
+            r.step(grid_w, grid_h);
+        }
+        *time += 1;
+        iter += 1;
+    }
+    println!("Grid at time t={}", time);
+    let _ = prettyprint_grid(robots, grid_w, grid_h);
+}
+
 fn grid_visualiser(
     mut robots: Vec<Robot>,
     grid_width: i16,
@@ -148,6 +170,9 @@ fn grid_visualiser(
                 match code {
                     KeyCode::Left => step_all_back(&mut robots, grid_width, grid_height, &mut time),
                     KeyCode::Right => step_all(&mut robots, grid_width, grid_height, &mut time),
+                    KeyCode::Up => {
+                        step_until_safer(&mut robots, grid_width, grid_height, &mut time)
+                    }
                     KeyCode::Enter => {
                         println!("Enter pressed, tree found.");
                         break;
