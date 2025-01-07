@@ -1,3 +1,4 @@
+use advent_of_code::count_digits;
 use itertools::Itertools;
 
 advent_of_code::solution!(7);
@@ -25,18 +26,7 @@ enum Operator {
     Concatenate,
 }
 
-fn count_digits(mut num: u64) -> u32 {
-    let mut count = 0;
-    if num == 0 {
-        return 1;
-    }
-    while num > 0 {
-        count += 1;
-        num /= 10;
-    }
-    count
-}
-
+/// Check validity of equation by applying all operators and testing equivalence
 fn check_equation(res: &u64, nums: &[u64], operators: Vec<&Operator>) -> bool {
     let mut out = nums[0];
     if nums.len() - 1 != operators.len() {
@@ -54,6 +44,7 @@ fn check_equation(res: &u64, nums: &[u64], operators: Vec<&Operator>) -> bool {
     out == *res
 }
 
+/// Iterate through all operator combinations. Return true if any of the combinations is valid.
 fn check_all_operations(res: &u64, nums: &[u64], allowed_operators: Vec<Operator>) -> bool {
     let num_operators = nums.len() - 1;
     for operators in

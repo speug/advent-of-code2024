@@ -2,6 +2,7 @@ pub mod template;
 
 // Use this file to add helper functions and additional modules.
 
+/// Find all neighboring indices in a 2D grid (with or without diagonals)
 pub fn get_neighboring_indices_2d(
     i: usize,
     j: usize,
@@ -37,6 +38,7 @@ pub fn get_neighboring_indices_2d(
         .collect()
 }
 
+/// Prettyprint a grid of characters
 pub fn prettyprint_grid(grid: &[Vec<char>]) -> String {
     grid.iter()
         .map(|row| row.iter().collect::<String>())
@@ -44,6 +46,20 @@ pub fn prettyprint_grid(grid: &[Vec<char>]) -> String {
         .join("\n")
 }
 
+/// Small helper function to check if a coordinate is inside a grid
 pub fn in_grid(i: isize, j: isize, height: isize, width: isize) -> bool {
     i >= 0 && i < height && j >= 0 && j < width
+}
+
+/// Returns the number of digits of a decimal number
+pub fn count_digits(mut num: u64) -> u32 {
+    let mut count = 0;
+    if num == 0 {
+        return 1;
+    }
+    while num > 0 {
+        count += 1;
+        num /= 10;
+    }
+    count
 }

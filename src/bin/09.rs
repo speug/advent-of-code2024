@@ -31,9 +31,11 @@ fn parse_input(input: &str, debug: bool) -> Vec<i16> {
 fn compact_disk_map(dm: &mut [i16]) {
     let mut left = 0;
     let mut right = dm.len() - 1;
+    // move pointer to first free "word"
     while dm[left] != -1 {
         left += 1;
     }
+    // move pointer to last occupied "word"
     while dm[right] == -1 {
         right -= 1;
     }
@@ -56,6 +58,8 @@ fn compact_whole_files(dm: &mut [i16]) {
     let mut free_blocks = Vec::new();
     let dm_len = dm.len();
     let mut i = 0;
+    // collect all free blocks and file blocks, storing the starting index and length
+    // to appropriate collections
     while i < dm_len {
         let mut block_size = 0;
         if dm[i] == -1 {
@@ -73,8 +77,8 @@ fn compact_whole_files(dm: &mut [i16]) {
             file_sizes[file_indicator as usize] = (block_size, i - block_size);
         }
     }
+    // iterate through files in a reverse manner, finding the first suitably sized free block
     for fi in (0..=max_file_indicator).rev() {
-        // println!("{}", disk_map_to_string(&dm));
         let (block_size, file_start) = file_sizes[fi as usize];
         let valid_free_block = free_blocks
             .iter()

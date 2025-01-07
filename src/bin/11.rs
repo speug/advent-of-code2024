@@ -1,3 +1,4 @@
+use advent_of_code::count_digits;
 use std::collections::HashMap;
 
 advent_of_code::solution!(11);
@@ -7,18 +8,6 @@ fn parse_input(input: &str) -> Vec<u64> {
         .split_whitespace()
         .map(|v| v.parse::<u64>().unwrap())
         .collect()
-}
-
-fn count_digits(mut num: u64) -> u32 {
-    let mut count = 0;
-    if num == 0 {
-        return 1;
-    }
-    while num > 0 {
-        count += 1;
-        num /= 10;
-    }
-    count
 }
 
 fn blink_bf(stones: &[u64]) -> Vec<u64> {
@@ -63,6 +52,7 @@ fn blink_hash(stones: &HashMap<u64, u64>) -> HashMap<u64, u64> {
 
 pub fn part_one(input: &str) -> Option<u64> {
     let mut stones = parse_input(input);
+    // here, can just brute-force
     for _ in 0..25 {
         stones = blink_bf(&stones);
     }

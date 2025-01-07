@@ -168,14 +168,14 @@ fn cheapest_win(m: &Machine, upper_limit: i64) -> Option<u64> {
             return None;
         }
     }
+    // I would have needed to program this, but the problem seems to be set up so that
+    // there is only exactly 0 or 1 solutions. Then again, part 2 would be much more difficult
+    // if this was not the case.
     panic!("Multiple solutions! {:}", m);
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
-    // X, Y can only be reached if X % gcd(a.x, b.x) == 0 and same for y
-    // also, gcd(a.x, b.x) is the smallest coeff in the linear combs
     let machines = parse_input(input, 0);
-    // println!("{:?}", machines);
     let mut out = 0u64;
     for m in machines {
         let cost = cheapest_win(&m, 100);
@@ -188,7 +188,6 @@ pub fn part_one(input: &str) -> Option<u64> {
 
 pub fn part_two(input: &str) -> Option<u64> {
     let machines = parse_input(input, 10000000000000);
-    // println!("{:?}", machines);
     let mut out = 0u64;
     for m in machines {
         let cost = cheapest_win(&m, 0);

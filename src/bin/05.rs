@@ -34,6 +34,7 @@ fn parse_input(input: &str) -> (Vec<Rule>, Vec<Vec<u8>>) {
             manuals.push(parts);
         }
     }
+    // check for manuals with duplicate pages; luckily, there seem to be none!
     let mut manuals_with_dups = Vec::new();
     for (i, pages) in manuals.clone().into_iter().enumerate() {
         if pages.len() > Vec::from_iter(pages.into_iter().unique()).len() {
@@ -98,11 +99,11 @@ fn sort_by_rules(pages: &mut [u8], rules: &Vec<Rule>) -> u16 {
 pub fn part_two(input: &str) -> Option<u64> {
     let (rules, manuals) = parse_input(input);
     let mut out = 0u64;
+    // Sort by rules. For each rule, check if the rule is broken; if so, swap the pages and
+    // recheck all previously processed rules (O(n^2) complexity)
     for mut manual in manuals {
         for rule in &rules {
             if !check_rule(&manual, rule) {
-                // keep sorting until no additional sorts are needed; kind of bad but eh
-                // rust does not support partial orderings for sort :^)
                 let mut swaps = 1;
                 while swaps != 0 {
                     swaps = sort_by_rules(&mut manual, &rules);

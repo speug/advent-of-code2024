@@ -1,6 +1,8 @@
 advent_of_code::solution!(6);
 use std::collections::HashSet;
 
+use advent_of_code::in_grid;
+
 fn parse_input(input: &str) -> Vec<Vec<char>> {
     let mut rows = Vec::new();
     for line in input.lines() {
@@ -37,6 +39,7 @@ struct Guard<'a> {
     visited: HashSet<((isize, isize), Direction)>,
 }
 
+/// Guard object. Tracks the current and previous positions of the guard and performs steps.
 impl<'a> Guard<'a> {
     fn new(x: isize, y: isize, direction: Direction, grid: &'a Vec<Vec<char>>) -> Self {
         Self {
@@ -50,6 +53,8 @@ impl<'a> Guard<'a> {
         }
     }
 
+    /// Stepping function. Updates the guards position and direction based on the rules and
+    /// returns the guard's status after a step.
     fn step(&mut self) -> GuardStatus {
         let (nx, ny) = match self.direction {
             Direction::North => (self.x - 1, self.y),
@@ -57,11 +62,13 @@ impl<'a> Guard<'a> {
             Direction::South => (self.x + 1, self.y),
             Direction::West => (self.x, self.y - 1),
         };
-        if nx < 0 || nx >= self.grid_height || ny < 0 || ny >= self.grid_width {
+        if !in_grid(nx, ny, self.grid_height, self.grid_width) {
+            // guard is out of the grid
             GuardStatus::Out
         } else if self.grid[nx as usize][ny as usize] == '#'
             || self.grid[nx as usize][ny as usize] == 'O'
         {
+            // facing obstacle, should turn clockwise
             self.direction = match self.direction {
                 Direction::North => Direction::East,
                 Direction::East => Direction::South,
@@ -73,8 +80,11 @@ impl<'a> Guard<'a> {
             self.x = nx;
             self.y = ny;
             if self.visited.insert(((nx, ny), self.direction)) {
+                // stepped on new ground
                 GuardStatus::In
             } else {
+                // if the guard is at the same position and facing the same direction as
+                // at a previous step, they have entered a loop.
                 GuardStatus::Looping
             }
         }

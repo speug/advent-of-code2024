@@ -13,6 +13,7 @@ fn parse_input(input: &str) -> Vec<Vec<char>> {
 }
 
 fn build_station_catalogue(grid: &[Vec<char>]) -> HashMap<char, Vec<(isize, isize)>> {
+    // builds a hashmap of character (station type) and station coordinates
     let mut stations: HashMap<char, Vec<(isize, isize)>> = HashMap::new();
     for (i, row) in grid.iter().enumerate() {
         for (j, label) in row.iter().enumerate() {
@@ -38,10 +39,12 @@ pub fn part_one(input: &str) -> Option<u64> {
         for antenna_pair in antenna_combs {
             let antenna_x_diff = antenna_pair[0].0 - antenna_pair[1].0;
             let antenna_y_diff = antenna_pair[0].1 - antenna_pair[1].1;
+            // behind station 1
             let (antinode1_x, antinode1_y) = (
                 antenna_pair[0].0 + antenna_x_diff,
                 antenna_pair[0].1 + antenna_y_diff,
             );
+            // behind station 2
             let (antinode2_x, antinode2_y) = (
                 antenna_pair[1].0 - antenna_x_diff,
                 antenna_pair[1].1 - antenna_y_diff,
@@ -63,7 +66,7 @@ pub fn part_two(input: &str) -> Option<u64> {
     let width = grid[0].len();
     let stations = build_station_catalogue(&grid);
     let mut antinodes = HashSet::new();
-    // just use while loops to find antinodes behind 1 and 2
+    // same as above, but now we just loop until we are out of grid
     for (_, antenna_coords) in stations.iter() {
         let antenna_combs = antenna_coords.iter().combinations(2);
         for antenna_pair in antenna_combs {

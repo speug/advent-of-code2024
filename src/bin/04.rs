@@ -1,5 +1,6 @@
 advent_of_code::solution!(4);
 
+use advent_of_code::in_grid;
 use regex::Regex;
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
@@ -29,7 +30,7 @@ fn count_xmas(grid: Vec<Vec<char>>, i: usize, j: usize, height: usize, width: us
         loop {
             let nx = i as isize + dx * next_idx as isize;
             let ny = j as isize + dy * next_idx as isize;
-            if nx >= 0 && nx < height as isize && ny >= 0 && ny < width as isize {
+            if in_grid(nx, ny, height as isize, width as isize) {
                 if word[next_idx] == grid[nx as usize][ny as usize] {
                     if next_idx == 3 {
                         out += 1;
@@ -124,7 +125,7 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(0));
+        assert_eq!(result, Some(18));
     }
 
     #[test]

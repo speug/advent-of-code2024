@@ -75,7 +75,8 @@ pub fn part_one(input: &str) -> Option<u64> {
 
 fn count_corners(area_map: &HashSet<(isize, isize)>) -> u64 {
     let mut corners = 0u64;
-    // there are only so many cases, so can probably just write them out
+    // number of corners in an area == number of edges (each corner connects to an edge)
+    // for each point inside the area, check each corner (can be inside or outside)
     for (x, y) in area_map {
         // check upper left corner
         // inside corner
