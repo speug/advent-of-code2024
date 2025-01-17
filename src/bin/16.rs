@@ -1,138 +1,225 @@
 advent_of_code::solution!(16);
-use std::collections::{BinaryHeap, HashMap, VecDeque};
-use std::hash::{Hash, Hasher};
-use std::rc::{Rc, Weak};
+use std::collections::{HashMap, HashSet};
+use std::u32;
 
-use advent_of_code::get_neighboring_indices_2d;
+use advent_of_code::{get_neighboring_indices_2d, prettyprint_grid};
+use crossterm::cursor::DisableBlinking;
 
-struct Vertex {
-    pos: (usize, usize),
-    passable: bool,
-    start: bool,
-    end: bool,
-    repr: char,
-    distance: u32,
-}
-
-impl PartialEq for Vertex {
-    fn eq(&self, other: &Self) -> bool {
-        self.pos.0 == other.pos.0 && self.pos.1 == other.pos.1
-    }
-}
-
-impl Eq for Vertex {}
-
-impl Hash for Vertex {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.pos.hash(state);
-    }
-}
-
-impl Ord for Vertex {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other
-            .distance
-            .cmp(&self.distance)
-            .then_with(|| self.pos.0.cmp(&other.pos.0))
-            .then_with(|| self.pos.1.cmp(&other.pos.1))
-    }
-}
-
-impl PartialOrd for Vertex {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-fn parse_input(input: &str) -> Vec<Vec<Vertex>> {
+type Vertex = ((usize, usize), (isize, isize));
+fn parse_input(input: &str) -> Vec<Vec<char>> {
     let mut grid = Vec::new();
-    let mut i = 0;
     for line in input.lines() {
-        let mut j = 0;
-        let mut row = Vec::new();
-        for c in line.chars() {
-            let v = Vertex {
-                pos: (i, j),
-                passable: c != '#',
-                start: c == 'S',
-                end: c == 'E',
-                repr: c,
-                distance: if c == 'S' { 0 } else { u32::MAX },
-            };
-            row.push(v);
-            j += 1;
-        }
+        let row = line.chars().collect();
         grid.push(row);
-        i += 1;
     }
     grid
 }
 
-fn djikstra(grid: &mut [Vec<Vertex>]) -> u32 {
-    let mut q = BinaryHeap::new();
+fn djikstra(grid: &[Vec<char>]) -> u32 {
+    let mut distances: HashMap<(usize, usize), u32> = HashMap::new();
     let mut prev: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut q: Vec<(usize, usize)> = Vec::new();
     let h = grid.len();
     let w = grid[0].len();
-    for row in grid.iter() {
-        for v in row.into_iter() {
-            if !v.start {
-                q.push(*v);
+    for (i, row) in grid.iter().enumerate() {
+        for (j, c) in row.iter().enumerate() {
+            match c {
+                '.' | 'E' => {
+                    q.push((i, j));
+                    distances.insert((i, j), u32::MAX);
+                }
+                'S' => {
+                    q.push((i, j));
+                    distances.insert((i, j), 0);
+                }
+                _ => {}
             }
         }
     }
     while !q.is_empty() {
-        let u = q.pop().unwrap();
-        let direction: (isize, isize) = if u.start {
+        let u = q
+            .clone()
+            .into_iter()
+            .min_by_key(|pos| distances[pos])
+            .unwrap();
+        if let Some(min_pos) = q.iter().position(|&pos| (pos.0 == u.0) && (pos.1 == u.1)) {
+            q.remove(min_pos);
+        }
+        let direction: (isize, isize) = if grid[u.0][u.1] == 'S' {
             (0, 1)
         } else {
-            let prev_pos = prev.get(&u.pos).unwrap();
+            let prev_pos = prev.get(&u).unwrap();
             (
-                u.pos.0 as isize - prev_pos.0 as isize,
-                u.pos.1 as isize - prev_pos.1 as isize,
+                u.0 as isize - prev_pos.0 as isize,
+                u.1 as isize - prev_pos.1 as isize,
             )
         };
-        let neighs: Vec<(usize, usize)> =
-            get_neighboring_indices_2d(u.pos.0, u.pos.1, &h, &w, false)
-                .into_iter()
-                .filter(|(x, y)| grid[*x][*y].passable)
-                .collect();
-        for v_coords in neighs {
-            let mut v = grid
-                .get_mut(v_coords.0)
-                .and_then(|row| row.get_mut(v_coords.1))
-                .unwrap();
-            let dist = if (v.pos.0 as isize == u.pos.0 as isize + direction.0)
-                && (v.pos.1 as isize == u.pos.1 as isize + direction.1)
+        let neighs: Vec<(usize, usize)> = get_neighboring_indices_2d(u.0, u.1, &h, &w, false)
+            .into_iter()
+            .filter(|&(x, y)| grid[x][y] != '#')
+            .collect();
+        for v in neighs {
+            let dist = if (v.0 as isize == u.0 as isize + direction.0)
+                && (v.1 as isize == u.1 as isize + direction.1)
             {
                 1
             } else {
                 1001
             };
-            let alt = u.distance + dist;
-            if alt < v.distance {
-                prev.insert(v.pos, u.pos);
-                v.distance = alt;
+            let alt = distances.get(&u).unwrap() + dist;
+            if alt < *distances.get(&v).unwrap() {
+                prev.insert(v, u);
+                distances.insert(v, alt);
             }
         }
     }
-    for row in grid.iter() {
-        for v in row.into_iter() {
-            if v.end {
-                return v.distance;
+    for (i, row) in grid.iter().enumerate() {
+        for (j, v) in row.iter().enumerate() {
+            if *v == 'E' {
+                return *distances.get(&(i, j)).unwrap();
             }
         }
     }
     unreachable!("Could not find end node!");
 }
 
-pub fn part_one(input: &str) -> Option<u64> {
+pub fn part_one(input: &str) -> Option<u32> {
     let grid = parse_input(input);
-
-    None
+    let end_distance = djikstra(&grid);
+    Some(end_distance)
 }
 
-pub fn part_two(input: &str) -> Option<u64> {
-    None
+fn dfs(prev: &HashMap<Vertex, Vec<Vertex>>, end: Vertex) -> HashSet<(usize, usize)> {
+    let mut visited = HashSet::new();
+    let mut s = Vec::new();
+    s.push(end);
+    while let Some(v) = s.pop() {
+        if visited.insert(v.0) {
+            if let Some(prevs) = prev.get(&v) {
+                for w in prevs {
+                    if !visited.contains(&w.0) {
+                        s.push(*w)
+                    }
+                }
+            }
+        }
+    }
+    visited
+}
+
+fn djikstra_all(grid: &[Vec<char>]) -> u32 {
+    let mut distances: HashMap<Vertex, u32> = HashMap::new();
+    let mut prev: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
+    let mut vertices: HashSet<Vertex> = HashSet::new();
+    let mut q: Vec<Vertex> = Vec::new();
+    let mut end_vertices = Vec::new();
+    let deltas = vec![(0, 1), (1, 0), (0, -1), (-1, 0)];
+    for (i, row) in grid.iter().enumerate() {
+        for (j, c) in row.iter().enumerate() {
+            match c {
+                '.' => {
+                    for d in deltas.clone().into_iter() {
+                        let previous_tile =
+                            &grid[(i as isize - d.0) as usize][(j as isize - d.1) as usize];
+                        if *previous_tile != '#' {
+                            q.push(((i, j), d));
+                            distances.insert(((i, j), d), u32::MAX);
+                            vertices.insert(((i, j), d));
+                        }
+                    }
+                }
+                'E' => {
+                    for d in deltas.clone().into_iter() {
+                        let previous_tile =
+                            &grid[(i as isize - d.0) as usize][(j as isize - d.1) as usize];
+                        if *previous_tile != '#' {
+                            q.push(((i, j), d));
+                            distances.insert(((i, j), d), u32::MAX);
+                            vertices.insert(((i, j), d));
+                            end_vertices.push(((i, j), d));
+                        }
+                    }
+                }
+                'S' => {
+                    q.push(((i, j), (0, 1)));
+                    distances.insert(((i, j), (0, 1)), 0);
+                    vertices.insert(((i, j), (0, 1)));
+                }
+                _ => {}
+            }
+        }
+    }
+    while !q.is_empty() {
+        let u = q
+            .clone()
+            .into_iter()
+            .min_by_key(|pos| distances[pos])
+            .unwrap();
+        if let Some(min_pos) = q.iter().position(|&(pos, dir)| {
+            (pos.0 == u.0.0) && (pos.1 == u.0.1) && (dir.0 == u.1.0) && (dir.1 == u.1.1)
+        }) {
+            q.remove(min_pos);
+        }
+        let direction: (isize, isize) = u.1;
+        let neighs: Vec<Vertex> = deltas
+            .clone()
+            .iter()
+            .filter_map(|&(dx, dy)| {
+                let nx = (u.0.0 as isize + dx) as usize;
+                let ny = (u.0.1 as isize + dy) as usize;
+                let nv = ((nx, ny), (dx, dy));
+                if vertices.contains(&nv) {
+                    Some(nv)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        for nv in neighs {
+            let dist = if (nv.0.0 as isize == u.0.0 as isize + direction.0)
+                && (nv.0.1 as isize == u.0.1 as isize + direction.1)
+            {
+                1
+            } else {
+                1001
+            };
+            let alt = distances.get(&u).unwrap() + dist;
+            if alt <= *distances.get(&nv).unwrap_or(&u32::MAX) {
+                prev.entry(nv).or_insert_with(Vec::new).push(u);
+                if distances.insert(nv, alt).is_none() {
+                    panic!(
+                        "Inserted a new value into the distances dict: {:?} (u was {:?})!",
+                        nv, u
+                    );
+                };
+            }
+        }
+    }
+    let mut all_visits: HashSet<(usize, usize)> = HashSet::new();
+    let mut min_distance = u32::MAX;
+    for v in end_vertices.iter() {
+        if let Some(dist) = distances.get(&v) {
+            println!("{:?}, current min {:?}, v {:?}", dist, min_distance, v);
+            if *dist <= min_distance {
+                min_distance = *dist;
+            }
+        }
+    }
+    for v in end_vertices.iter() {
+        if let Some(dist) = distances.get(&v) {
+            if *dist == min_distance {
+                let visited = dfs(&prev, *v);
+                all_visits.extend(visited);
+            }
+        }
+    }
+    all_visits.len() as u32
+}
+
+pub fn part_two(input: &str) -> Option<u32> {
+    let grid = parse_input(input);
+    let visited = djikstra_all(&grid);
+    Some(visited)
 }
 
 #[cfg(test)]
@@ -148,6 +235,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(45));
     }
 }
