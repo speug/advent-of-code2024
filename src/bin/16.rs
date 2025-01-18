@@ -2,8 +2,7 @@ advent_of_code::solution!(16);
 use std::collections::{HashMap, HashSet};
 use std::u32;
 
-use advent_of_code::{get_neighboring_indices_2d, prettyprint_grid};
-use crossterm::cursor::DisableBlinking;
+use advent_of_code::get_neighboring_indices_2d;
 
 type Vertex = ((usize, usize), (isize, isize));
 fn parse_input(input: &str) -> Vec<Vec<char>> {
@@ -37,11 +36,7 @@ fn djikstra(grid: &[Vec<char>]) -> u32 {
         }
     }
     while !q.is_empty() {
-        let u = q
-            .clone()
-            .into_iter()
-            .min_by_key(|pos| distances[pos])
-            .unwrap();
+        let u = *q.iter().min_by_key(|pos| distances[pos]).unwrap();
         if let Some(min_pos) = q.iter().position(|&pos| (pos.0 == u.0) && (pos.1 == u.1)) {
             q.remove(min_pos);
         }
@@ -90,29 +85,35 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 fn dfs(prev: &HashMap<Vertex, Vec<Vertex>>, end: Vertex) -> HashSet<(usize, usize)> {
-    let mut visited = HashSet::new();
+    let mut visited: HashSet<Vertex> = HashSet::new();
     let mut s = Vec::new();
     s.push(end);
     while let Some(v) = s.pop() {
-        if visited.insert(v.0) {
+        if visited.insert(v) {
             if let Some(prevs) = prev.get(&v) {
                 for w in prevs {
-                    if !visited.contains(&w.0) {
+                    if !visited.contains(&w) {
                         s.push(*w)
                     }
                 }
             }
         }
     }
-    visited
+    let visited_coords: HashSet<(usize, usize)> = visited.iter().map(|(pos, _)| *pos).collect();
+    visited_coords
 }
 
 fn djikstra_all(grid: &[Vec<char>]) -> u32 {
+    // initialise collections
     let mut distances: HashMap<Vertex, u32> = HashMap::new();
     let mut prev: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
+    // this is a collection which just holds all the vertices; used to iterate over
     let mut vertices: HashSet<Vertex> = HashSet::new();
+    // collection of univisited nodes
     let mut q: Vec<Vertex> = Vec::new();
+    // collect end vertices for the end check
     let mut end_vertices = Vec::new();
+    // E, S, W, N
     let deltas = vec![(0, 1), (1, 0), (0, -1), (-1, 0)];
     for (i, row) in grid.iter().enumerate() {
         for (j, c) in row.iter().enumerate() {
@@ -121,6 +122,7 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
                     for d in deltas.clone().into_iter() {
                         let previous_tile =
                             &grid[(i as isize - d.0) as usize][(j as isize - d.1) as usize];
+                        // check if the coord - direction combo can exist
                         if *previous_tile != '#' {
                             q.push(((i, j), d));
                             distances.insert(((i, j), d), u32::MAX);
@@ -132,6 +134,7 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
                     for d in deltas.clone().into_iter() {
                         let previous_tile =
                             &grid[(i as isize - d.0) as usize][(j as isize - d.1) as usize];
+                        // check if the coord - direction combo can exist
                         if *previous_tile != '#' {
                             q.push(((i, j), d));
                             distances.insert(((i, j), d), u32::MAX);
@@ -141,6 +144,7 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
                     }
                 }
                 'S' => {
+                    // the start vertex only has a single direction (east)
                     q.push(((i, j), (0, 1)));
                     distances.insert(((i, j), (0, 1)), 0);
                     vertices.insert(((i, j), (0, 1)));
@@ -150,21 +154,19 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
         }
     }
     while !q.is_empty() {
-        let u = q
-            .clone()
-            .into_iter()
-            .min_by_key(|pos| distances[pos])
+        // pop u for Q with the lowest distance
+        let (u_idx, u): (usize, Vertex) = q
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, v)| distances[v])
+            .map(|(idx, v)| (idx, *v))
             .unwrap();
-        if let Some(min_pos) = q.iter().position(|&(pos, dir)| {
-            (pos.0 == u.0.0) && (pos.1 == u.0.1) && (dir.0 == u.1.0) && (dir.1 == u.1.1)
-        }) {
-            q.remove(min_pos);
-        }
-        let direction: (isize, isize) = u.1;
+        q.swap_remove(u_idx);
+        let u_direction: (isize, isize) = u.1;
         let neighs: Vec<Vertex> = deltas
-            .clone()
             .iter()
             .filter_map(|&(dx, dy)| {
+                // check if the neighbour exists in the collection of vertices
                 let nx = (u.0.0 as isize + dx) as usize;
                 let ny = (u.0.1 as isize + dy) as usize;
                 let nv = ((nx, ny), (dx, dy));
@@ -176,8 +178,8 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
             })
             .collect();
         for nv in neighs {
-            let dist = if (nv.0.0 as isize == u.0.0 as isize + direction.0)
-                && (nv.0.1 as isize == u.0.1 as isize + direction.1)
+            let dist = if (nv.0.0 as isize == (u.0.0 as isize + u_direction.0))
+                && (nv.0.1 as isize == (u.0.1 as isize + u_direction.1))
             {
                 1
             } else {
@@ -187,6 +189,7 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
             if alt <= *distances.get(&nv).unwrap_or(&u32::MAX) {
                 prev.entry(nv).or_insert_with(Vec::new).push(u);
                 if distances.insert(nv, alt).is_none() {
+                    // we should never add any new distances at this point!
                     panic!(
                         "Inserted a new value into the distances dict: {:?} (u was {:?})!",
                         nv, u
@@ -196,15 +199,16 @@ fn djikstra_all(grid: &[Vec<char>]) -> u32 {
         }
     }
     let mut all_visits: HashSet<(usize, usize)> = HashSet::new();
+    // find the shortest path to end
     let mut min_distance = u32::MAX;
     for v in end_vertices.iter() {
         if let Some(dist) = distances.get(&v) {
-            println!("{:?}, current min {:?}, v {:?}", dist, min_distance, v);
             if *dist <= min_distance {
                 min_distance = *dist;
             }
         }
     }
+    // combine the shortest paths (in case you can enter the goal from 2 directions)
     for v in end_vertices.iter() {
         if let Some(dist) = distances.get(&v) {
             if *dist == min_distance {
