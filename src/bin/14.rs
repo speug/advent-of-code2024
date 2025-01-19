@@ -15,24 +15,10 @@ struct Robot {
 }
 
 impl Robot {
-    fn step(&mut self, grid_w: i16, grid_h: i16) {
-        self.pos = (
-            (((self.pos.0 + self.v.0) % grid_w) + grid_w) % grid_w,
-            (((self.pos.1 + self.v.1) % grid_h) + grid_h) % grid_h,
-        );
-    }
-
     fn step_n(&mut self, grid_w: i16, grid_h: i16, n: i16) {
         self.pos = (
             (((self.pos.0 + n * self.v.0) % grid_w) + grid_w) % grid_w,
             (((self.pos.1 + n * self.v.1) % grid_h) + grid_h) % grid_h,
-        );
-    }
-
-    fn step_back(&mut self, grid_w: i16, grid_h: i16) {
-        self.pos = (
-            (((self.pos.0 - self.v.0) % grid_w) + grid_w) % grid_w,
-            (((self.pos.1 - self.v.1) % grid_h) + grid_h) % grid_h,
         );
     }
 }
@@ -89,9 +75,8 @@ fn calculate_safety_score(robots: &Vec<Robot>, grid_w: i16, grid_h: i16) -> u64 
 pub fn part_one(input: &str) -> Option<u64> {
     let mut robots = parse_input(input);
     let (w, h) = (11, 7);
-    for r in robots.iter_mut() {
-        r.step_n(w, h, 100);
-    }
+    // let (w, h) = (101, 103);
+    step_all_n(&mut robots, 100, w, h, &mut 0);
     Some(calculate_safety_score(&robots, w, h))
 }
 
@@ -133,7 +118,15 @@ fn step_all(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
     let _ = prettyprint_grid(robots, grid_w, grid_h);
 }
 
-fn step_all_n(robots: &mut Vec<Robot>, n: i16, grid_w: i16, grid_h: i16) {}
+fn step_all_n(robots: &mut Vec<Robot>, n: i16, grid_w: i16, grid_h: i16, time: &mut i16) {
+    assert!(*time + n >= 0);
+    for r in robots.iter_mut() {
+        r.step_n(grid_w, grid_h, n);
+    }
+    *time += n;
+    println!("Grid at time t={}", time);
+    let _ = prettyprint_grid(robots, grid_w, grid_h);
+}
 
 fn step_all_back(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
     if *time > 0 {
