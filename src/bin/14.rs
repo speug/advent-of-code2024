@@ -136,7 +136,7 @@ fn grid_visualiser(
 
     let mut time_pointer: usize = 0;
 
-    // display the boards in a descending order
+    // display the boards in a descending order of safety score; the picture has the 5th? lowest score
     enable_raw_mode()?;
 
     println!(
