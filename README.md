@@ -46,9 +46,10 @@ Thanks for the excellent template Felix!
 | [Day 12](./src/bin/12.rs) | `75.7ms` | `80.8ms` |
 | [Day 13](./src/bin/13.rs) | `360.2µs` | `358.0µs` |
 | [Day 14](./src/bin/14.rs) | `504.6µs` | `44.0ns` |
+| [Day 15](./src/bin/15.rs) | `366.8µs` | `-` |
 | [Day 16](./src/bin/16.rs) | `828.1ms` | `6.2s` |
 
-**Total: 8937.84ms**
+**Total: 8938.21ms**
 <!--- benchmarking table --->
 
 ---
