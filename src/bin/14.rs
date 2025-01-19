@@ -10,12 +10,12 @@ use std::{collections::HashMap, io::Error};
 
 #[derive(Clone)]
 struct Robot {
-    pos: (i16, i16),
-    v: (i16, i16),
+    pos: (i32, i32),
+    v: (i32, i32),
 }
 
 impl Robot {
-    fn step_n(&mut self, grid_w: i16, grid_h: i16, n: i16) {
+    fn step_n(&mut self, grid_w: i32, grid_h: i32, n: i32) {
         self.pos = (
             (((self.pos.0 + n * self.v.0) % grid_w) + grid_w) % grid_w,
             (((self.pos.1 + n * self.v.1) % grid_h) + grid_h) % grid_h,
@@ -38,10 +38,10 @@ fn parse_input(input: &str) -> Vec<Robot> {
             break;
         }
         let captures = opt_captures.unwrap();
-        let p_x = captures.get(1).unwrap().as_str().parse::<i16>().unwrap();
-        let p_y = captures.get(2).unwrap().as_str().parse::<i16>().unwrap();
-        let v_x = captures.get(3).unwrap().as_str().parse::<i16>().unwrap();
-        let v_y = captures.get(4).unwrap().as_str().parse::<i16>().unwrap();
+        let p_x = captures.get(1).unwrap().as_str().parse::<i32>().unwrap();
+        let p_y = captures.get(2).unwrap().as_str().parse::<i32>().unwrap();
+        let v_x = captures.get(3).unwrap().as_str().parse::<i32>().unwrap();
+        let v_y = captures.get(4).unwrap().as_str().parse::<i32>().unwrap();
         let r = Robot {
             pos: (p_x, p_y),
             v: (v_x, v_y),
@@ -51,7 +51,7 @@ fn parse_input(input: &str) -> Vec<Robot> {
     robots
 }
 
-fn calculate_safety_score(robots: &Vec<Robot>, grid_w: i16, grid_h: i16) -> u64 {
+fn calculate_safety_score(robots: &Vec<Robot>, grid_w: i32, grid_h: i32) -> u64 {
     let mut end_coords = HashMap::new();
     for r in robots.iter() {
         *end_coords.entry(r.pos).or_insert(0) += 1;
@@ -74,13 +74,13 @@ fn calculate_safety_score(robots: &Vec<Robot>, grid_w: i16, grid_h: i16) -> u64 
 
 pub fn part_one(input: &str) -> Option<u64> {
     let mut robots = parse_input(input);
-    let (w, h) = (11, 7);
-    // let (w, h) = (101, 103);
-    step_all_n(&mut robots, 100, w, h, &mut 0);
+    // let (w, h) = (11, 7);
+    let (w, h): (i32, i32) = (101, 103);
+    step_all_n(&mut robots, 100, w, h, 0);
     Some(calculate_safety_score(&robots, w, h))
 }
 
-fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i16, grid_height: i16) -> Result<(), Error> {
+fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i32, grid_height: i32) -> Result<(), Error> {
     // test if this works!
     disable_raw_mode()?;
     let mut robot_counts = HashMap::new();
@@ -109,70 +109,58 @@ fn prettyprint_grid(robots: &Vec<Robot>, grid_width: i16, grid_height: i16) -> R
     Ok(())
 }
 
-fn step_all(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
-    for r in robots.iter_mut() {
-        r.step(grid_w, grid_h);
-    }
-    *time += 1;
-    println!("Grid at time t={}", time);
-    let _ = prettyprint_grid(robots, grid_w, grid_h);
-}
-
-fn step_all_n(robots: &mut Vec<Robot>, n: i16, grid_w: i16, grid_h: i16, time: &mut i16) {
-    assert!(*time + n >= 0);
+fn step_all_n(robots: &mut Vec<Robot>, n: i32, grid_w: i32, grid_h: i32, time: i32) {
+    assert!(time + n >= 0);
     for r in robots.iter_mut() {
         r.step_n(grid_w, grid_h, n);
     }
-    *time += n;
-    println!("Grid at time t={}", time);
-    let _ = prettyprint_grid(robots, grid_w, grid_h);
-}
-
-fn step_all_back(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
-    if *time > 0 {
-        for r in robots.iter_mut() {
-            r.step_back(grid_w, grid_h);
-        }
-        *time -= 1;
-    }
-    println!("Grid at time t={}", time);
-    let _ = prettyprint_grid(robots, grid_w, grid_h);
-}
-
-fn step_until_safer(robots: &mut Vec<Robot>, grid_w: i16, grid_h: i16, time: &mut u16) {
-    let max_iter: u16 = 10000;
-    let mut iter = 0u16;
-    let mut safety = calculate_safety_score(robots, grid_w, grid_h);
-    while (iter < max_iter) && (calculate_safety_score(robots, grid_w, grid_h) >= safety) {
-        for r in robots.iter_mut() {
-            r.step(grid_w, grid_h);
-        }
-        *time += 1;
-        iter += 1;
-    }
-    println!("Grid at time t={}", time);
-    let _ = prettyprint_grid(robots, grid_w, grid_h);
 }
 
 fn grid_visualiser(
-    mut robots: Vec<Robot>,
-    grid_width: i16,
-    grid_height: i16,
+    orig_robots: &Vec<Robot>,
+    grid_width: i32,
+    grid_height: i32,
 ) -> Result<u16, Error> {
-    let mut time = 0u16;
+    // first, calculate all safety scores
+    let max_iter = 10000;
+    let mut safety_scores = vec![0; max_iter + 1];
+    let mut robots = orig_robots.clone();
+    safety_scores[0] = calculate_safety_score(&robots, grid_width, grid_height);
+    for i in 1..=max_iter {
+        step_all_n(&mut robots, 1, grid_width, grid_height, i as i32);
+        safety_scores[i] = calculate_safety_score(&robots, grid_width, grid_height);
+    }
+    // sort the time stamps by safety scores
+    let mut times: Vec<usize> = (0..safety_scores.len()).collect();
+    times.sort_by(|&i, &j| safety_scores[i].cmp(&safety_scores[j]));
+
+    let mut time_pointer: usize = 0;
+
+    // display the boards in a descending order
     enable_raw_mode()?;
 
     println!(
         "Press right arrow to step forward in time, left arrow to go back or enter to output current time. Press 'q' to quit."
     );
+    // draw the first board
+    let time = times[time_pointer] as i32;
+    let mut robots = orig_robots.clone();
+    step_all_n(&mut robots, time, grid_width, grid_height, time);
+    disable_raw_mode()?;
+    println!("Grid at time t={}", time);
+    let _ = prettyprint_grid(&robots, grid_width, grid_height);
+    enable_raw_mode()?;
     loop {
         if event::poll(std::time::Duration::from_secs(1))? {
             if let Event::Key(KeyEvent { code, .. }) = event::read()? {
                 match code {
-                    KeyCode::Left => step_all_back(&mut robots, grid_width, grid_height, &mut time),
-                    KeyCode::Right => step_all(&mut robots, grid_width, grid_height, &mut time),
-                    KeyCode::Up => {
-                        step_until_safer(&mut robots, grid_width, grid_height, &mut time)
+                    KeyCode::Left => {
+                        if time_pointer > 0 {
+                            time_pointer -= 1;
+                        }
+                    }
+                    KeyCode::Right => {
+                        time_pointer += 1;
                     }
                     KeyCode::Enter => {
                         println!("Enter pressed, tree found.");
@@ -188,17 +176,17 @@ fn grid_visualiser(
         }
     }
     disable_raw_mode()?;
-    Ok(time)
+    Ok(times[time_pointer] as u16)
 }
 
-pub fn part_two(input: &str) -> Option<u64> {
+pub fn part_two(input: &str) -> Option<u16> {
     // just print/display?
-    let mut cache = None;
-    //    if cache.is_none() {
-    //        let robots = parse_input(input);
-    //        let (w, h) = (101, 103);
-    //        cache = grid_visualiser(robots, w, h).ok();
-    //    }
+    let mut cache = Some(8179);
+    if cache.is_none() {
+        let robots = parse_input(input);
+        let (w, h) = (101, 103);
+        cache = grid_visualiser(&robots, w, h).ok();
+    }
     cache
 }
 
