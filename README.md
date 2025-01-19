@@ -45,10 +45,10 @@ Thanks for the excellent template Felix!
 | [Day 11](./src/bin/11.rs) | `1.4ms` | `4.8ms` |
 | [Day 12](./src/bin/12.rs) | `75.7ms` | `80.8ms` |
 | [Day 13](./src/bin/13.rs) | `360.2µs` | `358.0µs` |
-| [Day 14](./src/bin/14.rs) | `233.2µs` | `737.9ms` |
+| [Day 14](./src/bin/14.rs) | `504.6µs` | `44.0ns` |
 | [Day 16](./src/bin/16.rs) | `828.1ms` | `6.2s` |
 
-**Total: 9675.47ms**
+**Total: 8937.84ms**
 <!--- benchmarking table --->
 
 ---
